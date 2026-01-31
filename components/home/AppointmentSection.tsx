@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Button from "../shared/Button";
 import { useSearchParams } from "next/navigation";
-import type { ContactSettings } from "@/types/database";
+import type { ContactSettings, Database } from "@/types/database";
 
 const DEFAULT_CONTACT: ContactSettings = {
   id: "",
@@ -96,19 +96,22 @@ export default function AppointmentSection() {
         (s) => s.title === formData.service,
       );
 
-      const { error: insertError } = await supabase
-        .from("appointments")
-        .insert({
-          full_name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          service_id: selectedService?.id || null,
-          service_name: formData.service,
-          appointment_date: formData.date,
-          appointment_time: formData.time,
-          notes: formData.message || null,
-          status: "pending",
-        });
+      const payload: Database["public"]["Tables"]["appointments"]["Insert"] = {
+        full_name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        service_id: selectedService?.id || null,
+        service_name: formData.service,
+        appointment_date: formData.date,
+        appointment_time: formData.time,
+        notes: formData.message || null,
+        status: "pending",
+        cancellation_reason: null,
+      };
+      const appointmentsTable = supabase.from("appointments") as unknown as {
+        insert: (v: Database["public"]["Tables"]["appointments"]["Insert"]) => Promise<{ data: unknown; error: { message: string } | null }>;
+      };
+      const { error: insertError } = await appointmentsTable.insert(payload);
 
       if (insertError) throw insertError;
 
@@ -126,8 +129,8 @@ export default function AppointmentSection() {
       setTimeout(() => {
         setSuccess(false);
       }, 5000);
-    } catch (err: any) {
-      setError(err.message || "Bir hata oluştu. Lütfen tekrar deneyin.");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Bir hata oluştu. Lütfen tekrar deneyin.");
     } finally {
       setLoading(false);
     }

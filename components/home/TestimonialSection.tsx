@@ -32,7 +32,7 @@ export default async function TestimonialSection() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {testimonials.map((testimonial) => (
+          {testimonials.map((testimonial: any) => (
             <div
               key={testimonial.id}
               className="bg-white rounded-3xl shadow-xl p-8"

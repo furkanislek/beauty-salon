@@ -6,7 +6,15 @@ import { createClient } from '@/lib/supabase/client';
 import AdminNav from '@/components/admin/AdminNav';
 import Image from 'next/image';
 import RichTextEditor from '@/components/admin/RichTextEditor';
+import type { Database } from '@/types/database';
 
+export default function NewBlogPostPage() {
+  const router = useRouter();
+  const supabase = createClient();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
@@ -64,26 +72,32 @@ import RichTextEditor from '@/components/admin/RichTextEditor';
         imageUrl = publicUrl;
       }
 
-      const { error: insertError } = await supabase.from('blog_posts').insert({
+      const payload: Database['public']['Tables']['blog_posts']['Insert'] = {
         title: formData.title,
         slug: formData.slug || generateSlug(formData.title),
         excerpt: formData.excerpt,
         content: formData.content,
-        image_url: imageUrl || null,
+        image_url: imageUrl || '',
         category: formData.category,
         author_name: formData.author_name,
+        author_avatar: null,
         read_time: formData.read_time,
+        published_at: new Date().toISOString(),
         is_active: formData.is_active,
         meta_title: formData.meta_title || formData.title,
         meta_description: formData.meta_description || formData.excerpt,
-      });
+      };
+      // Supabase TypeScript tipleri bazen Insert için 'never' üretiyor; tabloyu any ile cast ediyoruz.
+      const blogTable = supabase.from('blog_posts') as unknown as { insert: (v: Database['public']['Tables']['blog_posts']['Insert']) => Promise<{ data: unknown; error: { message: string } | null }> };
+      const { error: insertError } = await blogTable.insert(payload);
 
       if (insertError) throw insertError;
 
+      setLoading(false);
       router.push('/admin/blog');
       router.refresh();
-    } catch (err: any) {
-      setError(err.message || 'Bir hata oluştu');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Bir hata oluştu');
       setLoading(false);
     }
   };

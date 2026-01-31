@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import Button from "@/components/shared/Button";
+import type { BlogPost } from "@/types/database";
 
 interface BlogPostPageProps {
   params: Promise<{
@@ -16,13 +17,14 @@ export async function generateMetadata({ params }: BlogPostPageProps) {
   const { slug } = await params;
   const supabase = await createClient();
 
-  const { data: post } = await supabase
+  const { data } = await supabase
     .from("blog_posts")
     .select("*")
     .eq("slug", slug)
     .eq("is_active", true)
     .single();
 
+  const post = data as BlogPost | null;
   if (!post) {
     return {
       title: "Blog Yazısı Bulunamadı",
@@ -39,24 +41,27 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
   const supabase = await createClient();
 
-  const { data: post } = await supabase
+  const { data: postData } = await supabase
     .from("blog_posts")
     .select("*")
     .eq("slug", slug)
     .eq("is_active", true)
     .single();
 
+  const post = postData as BlogPost | null;
   if (!post) {
     notFound();
   }
 
-  const { data: relatedPosts } = await supabase
+  const { data: relatedData } = await supabase
     .from("blog_posts")
     .select("*")
     .eq("is_active", true)
     .eq("category", post.category)
     .neq("id", post.id)
     .limit(2);
+
+  const relatedPosts = relatedData as BlogPost[] | null;
 
   return (
     <main className="min-h-screen pt-20">

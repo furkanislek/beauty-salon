@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import type { BlogPost } from "@/types/database";
 
 export const metadata = {
   title: "Blog | Beauty Salon",
@@ -13,12 +14,13 @@ export const revalidate = 3600; // 1 saat cache
 export default async function BlogPage() {
   const supabase = await createClient();
 
-  const { data: posts } = await supabase
+  const { data } = await supabase
     .from("blog_posts")
     .select("*")
     .eq("is_active", true)
     .order("created_at", { ascending: false });
 
+  const posts = data as BlogPost[] | null;
   if (!posts) {
     notFound();
   }
