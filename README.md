@@ -12,7 +12,7 @@ Profesyonel güzellik salonu ve spa merkezi için geliştirilmiş, tam özellikl
 - [Veritabanı ve Tipler](#veritabanı-ve-tipler)
 - [Ortak Sayfalar (Public)](#ortak-sayfalar-public)
 - [Admin Paneli](#admin-paneli)
-- [Kimlik Doğrulama ve Middleware](#kimlik-doğrulama-ve-middleware)
+- [Kimlik Doğrulama ve Proxy](#kimlik-doğrulama-ve-proxy)
 - [Supabase İstemcileri](#supabase-istemcileri)
 - [Kurulum ve Çalıştırma](#kurulum-ve-çalıştırma)
 - [Ortam Değişkenleri](#ortam-değişkenleri)
@@ -43,13 +43,13 @@ Uygulama tek repo içinde iki ana bölümden oluşur:
    Ana sayfa, blog ve randevu formu. Sunucu bileşenleri ve Supabase ile veri çekimi; sayfa bazlı cache (`revalidate`).
 
 2. **Admin (Yönetim paneli)**  
-   `/admin` altında toplanan sayfalar. Supabase Auth ile korunur; middleware ile giriş yapmamış kullanıcılar `/admin/login`e yönlendirilir.
+   `/admin` altında toplanan sayfalar. Supabase Auth ile korunur; proxy ile giriş yapmamış kullanıcılar `/admin/login`e yönlendirilir.
 
 Veri akışı:
 
 - **Public:** `createClient()` (server veya client) → Supabase REST API → PostgreSQL.
 - **Admin:** Aynı client’lar; hassas işlemler için ileride `createAdminClient()` (service role) kullanılabilir.
-- **Auth:** Cookie tabanlı oturum; middleware her `/admin/*` isteğinde oturumu kontrol eder.
+- **Auth:** Cookie tabanlı oturum; proxy her `/admin/*` isteğinde oturumu kontrol eder.
 
 ---
 
@@ -94,7 +94,7 @@ beauty-salon/
 ├── types/
 │   ├── database.ts               # Supabase tabloları ve RPC tipleri
 │   └── blog.ts                   # Blog ile ilgili ek tipler / sabitler
-├── middleware.ts                 # /admin koruması ve auth yönlendirme
+├── proxy.ts                      # /admin koruması ve auth yönlendirme (Next.js 16 proxy)
 ├── next.config.ts
 ├── package.json
 └── tsconfig.json
@@ -173,7 +173,7 @@ Public sayfalar sunucu bileşenleri ağırlıklı; sadece form ve etkileşimli k
 
 ## Admin Paneli
 
-Tüm admin sayfaları `/admin` altındadır ve middleware ile korunur.
+Tüm admin sayfaları `/admin` altındadır ve proxy ile korunur.
 
 ### Giriş
 
@@ -208,9 +208,9 @@ Admin arayüzünde ortak bileşenler: **AdminNav** (üst menü ve çıkış), **
 
 ---
 
-## Kimlik Doğrulama ve Middleware
+## Kimlik Doğrulama ve Proxy
 
-- **middleware.ts** sadece `/admin/*` path’lerinde çalışır (`matcher: ['/admin/:path*']`).
+- **proxy.ts** sadece `/admin/*` path’lerinde çalışır (`matcher: ['/admin/:path*']`).
 - Her istekte Supabase server client ile cookie’den `getUser()` çağrılır.
 - Kurallar:
   - Kullanıcı yok ve path `/admin` veya altı (login hariç) → yönlendirme `/admin/login`.
@@ -280,6 +280,6 @@ Admin girişi için Supabase Dashboard üzerinden Auth → Users ile bir kullan�
 - **Mimari:** Next.js App Router + Supabase (PostgreSQL + Auth), tip güvenli TypeScript.
 - **Public:** Ana sayfa (Hero’dan Randevu’ya kadar bölümler), blog listesi/detay, randevu formu ve müsait slotlar.
 - **Admin:** Giriş, dashboard, hero/tedavi/fiyat/kampanya/iletişim ayarları, blog CRUD, randevu listesi ve durum yönetimi.
-- **Güvenlik:** Admin rotaları middleware ile korunur; auth cookie tabanlıdır.
+- **Güvenlik:** Admin rotaları proxy ile korunur; auth cookie tabanlıdır.
 
 Bu README, projenin mimarisini ve işlevlerini detaylı şekilde açıklar. Veritabanı şeması (tablo ve RPC’ler) Supabase tarafında `types/database.ts` ile uyumlu olacak şekilde kurulmalıdır.
