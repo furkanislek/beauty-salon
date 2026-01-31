@@ -9,9 +9,13 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.8.0",
+    "@supabase/supabase-js": "^2.93.2",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "@tiptap/react": "^3.17.1",
+    "@tiptap/starter-kit": "^3.17.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
