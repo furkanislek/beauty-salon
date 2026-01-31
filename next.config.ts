@@ -10,6 +10,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  transpilePackages: [
+    "@floating-ui/dom",
+    "@tiptap/react",
+    "@tiptap/extension-floating-menu",
+    "@tiptap/extension-bubble-menu",
+  ],
 };
 
 export default nextConfig;
